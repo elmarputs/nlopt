@@ -1,14 +1,24 @@
 add_custom_target (tests)
 
+add_executable (t_tutorial t_tutorial.cxx)
+target_link_libraries (t_tutorial ${nlopt_lib})
+add_dependencies (tests t_tutorial)
+target_include_directories (t_tutorial PRIVATE ${NLOPT_PRIVATE_INCLUDE_DIRS})
+add_test (NAME check_tutorial COMMAND t_tutorial)
+if (CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+  set_tests_properties (check_tutorial PROPERTIES ENVIRONMENT "PATH=${PROJECT_BINARY_DIR}\\${CMAKE_BUILD_TYPE};$ENV{PATH}")  # to load dll
+endif ()
+
 # have to add timer.c and mt19937ar.c as symbols are declared extern
 add_executable (testopt testfuncs.c testfuncs.h testopt.c
   ${PROJECT_SOURCE_DIR}/src/util/timer.c ${PROJECT_SOURCE_DIR}/src/util/mt19937ar.c ${PROJECT_SOURCE_DIR}/src/util/nlopt-getopt.c)
 target_link_libraries (testopt ${nlopt_lib})
+target_include_directories (testopt PRIVATE ${NLOPT_PRIVATE_INCLUDE_DIRS})
+add_dependencies (tests testopt)
+
 if (NLOPT_CXX)
   set_target_properties(testopt PROPERTIES LINKER_LANGUAGE CXX)
 endif ()
-target_include_directories (testopt PRIVATE ${NLOPT_PRIVATE_INCLUDE_DIRS})
-add_dependencies (tests testopt)
 
 foreach (algo_index RANGE 29)# 43
   foreach (obj_index RANGE 1)# 21
@@ -50,6 +60,10 @@ endif ()
 
 if (OCTAVE_FOUND)
   add_test (NAME test_octave COMMAND ${OCTAVE_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/t_octave.m ${PROJECT_SOURCE_DIR}/src/octave ${PROJECT_BINARY_DIR}/src/octave)
+endif ()
+
+if (MATLAB_FOUND)
+  add_test (NAME test_matlab COMMAND ${Matlab_MAIN_PROGRAM} -nodesktop -nosplash  -r "addpath('${PROJECT_SOURCE_DIR}/src/octave'); addpath('${PROJECT_BINARY_DIR}/src/octave'); try; run('${CMAKE_CURRENT_SOURCE_DIR}/t_matlab.m'); catch; exit(1); end; quit")
 endif ()
 
 if (GUILE_FOUND AND ((SWIG_FOUND AND SWIG_VERSION VERSION_GREATER 2.0.9) OR (EXISTS ${PROJECT_SOURCE_DIR}/src/swig/nlopt-guile.cpp)))

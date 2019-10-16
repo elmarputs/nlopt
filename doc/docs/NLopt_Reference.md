@@ -72,6 +72,13 @@ You can get a descriptive (null-terminated) string corresponding to a particular
 const char *nlopt_algorithm_name(nlopt_algorithm algorithm);
 ```
 
+You can convert an `nlopt_algorithm` to/from a string identifier (`NLOPT_FOO` converts to/from `"FOO"`) by calling:
+
+```
+const char *nlopt_algorithm_to_string(nlopt_algorithm algorithm);
+nlopt_algorithm nlopt_algorithm_from_string(const char *name);
+```
+
 
 Objective function
 ------------------
@@ -96,6 +103,7 @@ The return value should be the value of the function at the point `x`, where `x`
 In addition, if the argument `grad` is not `NULL`, then `grad` points to an array of length `n` which should (upon return) be set to the gradient of the function with respect to the optimization parameters at `x`. That is, `grad[i]` should upon return contain the partial derivative $\partial f / \partial x_i$, for $0 \leq i < n$, if `grad` is non-`NULL`. Not all of the optimization algorithms (below) use the gradient information: for algorithms listed as "derivative-free," the `grad` argument will always be `NULL` and need never be computed. (For algorithms that do use gradient information, however, `grad` may still be `NULL` for some calls.)
 
 The `f_data` argument is the same as the one passed to `nlopt_set_min_objective` or `nlopt_set_max_objective`, and may be used to pass any additional data through to the function. (That is, it may be a pointer to some caller-defined data structure/type containing information your function needs, which you convert from `void*` by a typecast.)
+
 
 Bound constraints
 -----------------
@@ -239,25 +247,25 @@ nlopt_result nlopt_set_xtol_rel(nlopt_opt opt, double tol);
 double nlopt_get_xtol_rel(const nlopt_opt opt);
 ```
 
-
-Set relative tolerance on optimization parameters: stop when an optimization step (or an estimate of the optimum) changes every parameter by less than `tol` multiplied by the absolute value of the parameter. (If there is any chance that an optimal parameter is close to zero, you might want to set an absolute tolerance with `nlopt_set_xtol_abs` as well.) Criterion is disabled if `tol` is non-positive.
+Set relative tolerance on optimization parameters: stop when an optimization step (or an estimate of the optimum) causes a relative change the parameters $x$ by less than `tol`, i.e. $\Vert \Delta x \Vert_w < \mbox{tol}\cdot\Vert x \Vert_w$ as measured by a weighted L₁ norm $\Vert x \Vert_w = \sum_i w_i |x_i|$, where the weights $w_i$ default to 1.
+(If there is any chance that the optimal $\Vert x \Vert$ is close to zero, you might want to set an absolute tolerance with `nlopt_set_xtol_abs` as well.) Criterion is disabled if `tol` is non-positive.
 
 ```
-nlopt_result nlopt_set_xtol_abs(nlopt_opt opt, const double* tol);
+nlopt_result nlopt_set_x_weights(nlopt_opt opt, const double *w);
+nlopt_result nlopt_set_x_weights1(nlopt_opt opt, const double w);
+nlopt_result nlopt_get_x_weights(const nlopt_opt opt, double *w);
+```
+
+Set/get the weights used when the computing L₁ norm for the `xtol_rel` stopping criterion above, where `*w` must point to an array of length equal to the number of optimization parameters in `opt`.   `nlopt_set_x_weights1` can be used to set all of the weights to the same value `w`.   The weights default to `1`, but non-constant weights can be used to handle situations where the different parameters `x` have different units or importance, for example.
+
+```
+nlopt_result nlopt_set_xtol_abs(nlopt_opt opt, const double *tol);
+nlopt_result nlopt_set_xtol_abs1(nlopt_opt opt, double tol);
 nlopt_result nlopt_get_xtol_abs(const nlopt_opt opt, double *tol);
 ```
 
 
-Set absolute tolerances on optimization parameters. `tol` is a pointer to an array of length `n` (the dimension from `nlopt_create`) giving the tolerances: stop when an optimization step (or an estimate of the optimum) changes every parameter `x[i]` by less than `tol[i]`. (Note that this function makes a copy of the `tol` array, so subsequent changes to the caller's `tol` have no effect on `opt`.) In `nlopt_get_xtol_abs`, `tol` must be an array of length `n`, which upon successful return contains a copy of the current tolerances.
-
-For convenience, the following function may be used to set the absolute tolerances in all `n` optimization parameters to the same value:
-
-```
-nlopt_result nlopt_set_xtol_abs1(nlopt_opt opt, double tol);
-```
-
-
-Criterion is disabled if `tol` is non-positive.
+Set absolute tolerances on optimization parameters. `tol` is a pointer to an array of length `n` (the dimension from `nlopt_create`) giving the tolerances: stop when an optimization step (or an estimate of the optimum) changes every parameter `x[i]` by less than `tol[i]`. (Note that `nlopt_set_xtol_abs` makes a copy of the `tol` array, so subsequent changes to the caller's `tol` have no effect on `opt`.) In `nlopt_get_xtol_abs`, `tol` must be an array of length `n`, which upon successful return contains a copy of the current tolerances.  For convenience, the `nlopt_set_xtol_abs1` may be used to set the absolute tolerances in all `n` optimization parameters to the same value.  Criterion is disabled if `tol` is non-positive.
 
 ```
 nlopt_result nlopt_set_maxeval(nlopt_opt opt, int maxeval);
@@ -398,6 +406,15 @@ NLOPT_FORCED_STOP` `=` `-5
 ```
 
 Halted because of a [forced termination](#Forced_termination.md): the user called `nlopt_force_stop(opt)` on the optimization’s `nlopt_opt` object `opt` from the user’s objective function or constraints.
+
+
+You can convert an `nlopt_result` to/from a string identifier (`NLOPT_FOO` converts to/from `"FOO"`) by calling:
+
+```
+const char *nlopt_result_to_string(nlopt_result result);
+nlopt_result nlopt_result_from_string(const char *name);
+```
+
 
 Local/subsidiary optimization algorithm
 ---------------------------------------

@@ -11,7 +11,7 @@ Using the NLopt Matlab API
 
 On Unix, the Matlab and Octave interfaces should automatically be installed in places where they will be found at runtime, assuming you have Matlab and Octave correctly installed on your machine, as documented in the [Installation manual](NLopt_Installation.md).
 
-On Windows, we provide a precompiled [.zip](https://en.wikipedia.org/wiki/.zip) file of the NLopt library, which includes a `matlab` directory. In this directory are a set of `.m` files (mostly implementing constants and documentation) and a `nlopt-optimize.c` file which can be compiled into a [w:MEX file](https://en.wikipedia.org/wiki/MEX_file) callable from Matlab. All of these files must be placed somewhere in your Matlab path or in your working directory if you want to use them.
+On Windows, we provide a precompiled  the NLopt library, which includes a `matlab` directory. Using this or your own compiled version, you can then download [`nlopt-optimize-mex.c` file](https://github.com/stevengj/nlopt/blob/master/src/octave/nlopt_optimize-mex.c), rename it to `nlopt-optimize.c`, and compile it into a [MEX file](https://en.wikipedia.org/wiki/MEX_file) callable from Matlab — the result must be put into your Matlab path or your working directory.  You will also want to copy the  the `.m` files (mostly implementing constants and documentation) from the `src/octave` directory of the NLopt release and put it into the same directory as the MEX file.
 
 The `opt` structure
 -------------------
@@ -100,6 +100,13 @@ opt.xtol_rel
 
 
 Set relative tolerance on optimization parameters.
+
+```
+opt.x_weights
+```
+
+
+Set the weights used when the computing L₁ norm for the `xtol_rel` stopping criterion above. The `opt.x_weights` value must be a vector of length `n` (the same length as the initial guess passed to `nlopt_optimize`).
 
 ```
 opt.xtol_abs
